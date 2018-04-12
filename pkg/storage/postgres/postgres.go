@@ -18,6 +18,19 @@ func New(dsn string) *Postgres {
 	return &Postgres{sqlx.MustConnect("postgres", dsn)}
 }
 
+// Get User retrieves a username
+func (db *Postgres) GetFests() ([]model.Festival, error) {
+	q := "SELECT name FROM festival"
+
+	var fests []model.Festival
+	err := db.Select(&fests, q)
+	if err != nil {
+		return []model.Festival{{}}, err
+	}
+
+	return fests, nil
+}
+
 func (db *Postgres) InsertFests(fests []model.Festival) error {
 	q := "INSERT INTO festival(id, name) VALUES ($1, $2)"
 

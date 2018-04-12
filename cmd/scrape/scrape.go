@@ -31,6 +31,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	log.Println("retrieving stored festivals...")
+	storedFests, err := db.GetFests()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, f := range storedFests {
+		log.Printf("%v", f)
+	}
+
 }
 
 func migrateDB() error {
