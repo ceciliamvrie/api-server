@@ -5,7 +5,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/techmexdev/lineuplist"
-	"github.com/techmexdev/lineuplist/postgres"
+	"github.com/techmexdev/lineuplist/pkg/postgres"
 	"github.com/unrolled/render"
 )
 
