@@ -6,8 +6,7 @@ import (
 	"os"
 
 	_ "github.com/lib/pq"
-	"github.com/techmexdev/lineuplist/pkg/handler"
-	"github.com/techmexdev/lineuplist/pkg/storage/postgres"
+	"github.com/techmexdev/lineuplist/handler"
 )
 
 func main() {
@@ -21,7 +20,7 @@ func main() {
 		options = handler.Options{Log: true}
 	}
 
-	router := handler.New(postgres.New(dsn), options)
+	router := handler.New(dsn, options)
 
 	if goEnv == "PROD" {
 		log.Println("Starting server at port 80...")

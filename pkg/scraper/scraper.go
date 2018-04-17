@@ -3,17 +3,16 @@ package scraper
 import (
 	"regexp"
 
-	"github.com/techmexdev/lineuplist/pkg/model"
-
 	"github.com/gocolly/colly"
+	"github.com/techmexdev/lineuplist"
 )
 
 // GetFestivals scrapes and returns festivals
-func GetFestivals() ([]model.Festival, error) {
+func GetFestivals() ([]lineuplist.Festival, error) {
 	c := colly.NewCollector()
 	fests, err := scrapeFests(c)
 	if err != nil {
-		return []model.Festival{{}}, err
+		return []lineuplist.Festival{{}}, err
 	}
 	c.Visit("https://www.musicfestivalwizard.com/festival-guide/us-festivals/")
 	c.Wait()
@@ -21,8 +20,8 @@ func GetFestivals() ([]model.Festival, error) {
 	return fests, nil
 }
 
-func scrapeFests(c *colly.Collector) ([]model.Festival, error) {
-	var fests = make([]model.Festival, 18, 18)
+func scrapeFests(c *colly.Collector) ([]lineuplist.Festival, error) {
+	var fests = make([]lineuplist.Festival, 18, 18)
 	var err error
 	var nameReg *regexp.Regexp
 	index := 0
@@ -30,7 +29,7 @@ func scrapeFests(c *colly.Collector) ([]model.Festival, error) {
 	c.OnHTML(".singlefestlisting", func(e *colly.HTMLElement) {
 		nameReg, err = regexp.Compile("(.*[^ \\d])")
 		name := nameReg.FindString(e.ChildText(".festivaltitle"))
-		fests[index] = model.Festival{Name: name}
+		fests[index] = lineuplist.Festival{Name: name}
 		index++
 		link := e.ChildAttr("a", "href")
 		err = c.Visit(link)
