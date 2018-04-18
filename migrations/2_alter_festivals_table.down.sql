@@ -1,0 +1,3 @@
+ALTER TABLE festival
+  DROP COLUMN date RESTRICT,
+  DROP COLUMN location RESTRICT;

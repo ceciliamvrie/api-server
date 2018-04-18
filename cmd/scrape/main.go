@@ -14,12 +14,11 @@ import (
 )
 
 func main() {
-	err := migrateDB()
-	if err != nil {
-		log.Fatal(err)
-	}
+	log.Println("migrating database...")
+	migrateDB()
 
-	fests, err := scraper.GetFestivals()
+	log.Println("scraping festivals...")
+	fests, err := scraper.Festivals()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -27,44 +26,33 @@ func main() {
 	log.Printf("scraped %v festivals", len(fests))
 
 	db := postgres.NewFestivalStorage(os.Getenv("PG_DSN"))
-
 	for _, f := range fests {
+		log.Printf("   Saving %#v...", f)
 		err = db.Save(f)
 		if err != nil {
 			log.Print(err)
 		}
 	}
 
-	log.Println("retrieving stored festivals...")
-	storedFests, err := db.LoadAll()
+}
+
+func migrateDB() {
+	db, err := sql.Open("postgres", os.Getenv("PG_DSN"))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	for _, f := range storedFests {
-		log.Printf("   %v", f)
-	}
-
-}
-
-func migrateDB() error {
-	db, err := sql.Open("postgres", os.Getenv("PG_DSN"))
-	if err != nil {
-		return err
-	}
-
 	driver, err := migpg.WithInstance(db, &migpg.Config{})
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
 		"file://migrations",
 		"postgres", driver)
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 
 	m.Up()
-	return nil
 }
