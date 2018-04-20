@@ -45,10 +45,26 @@ func scrapePage(page int) []lineuplist.Festival {
 	c := colly.NewCollector()
 
 	c.OnHTML(".singlefestlisting", func(e *colly.HTMLElement) {
+		name := regexp.MustCompile("(.*[^ \\d])").FindString(e.ChildText(".festivaltitle"))
+		startDate, endDate, err := parseDate(e.ChildText(".festivaldate"))
+		if err != nil {
+			log.Println("error parsing date for: ", name, err)
+			return
+		}
+
+		country, state, city, err := parseLocation(e.ChildText(".festivallocation"))
+		if err != nil {
+			log.Println("error parsing location for ", name, err)
+			return
+		}
+
 		fests = append(fests, lineuplist.Festival{
-			Name:     regexp.MustCompile("(.*[^ \\d])").FindString(e.ChildText(".festivaltitle")),
-			Date:     e.ChildText(".festivaldate"),
-			Location: e.ChildText(".festivallocation"),
+			Name:      name,
+			StartDate: startDate,
+			EndDate:   endDate,
+			Country:   country,
+			State:     state,
+			City:      city,
 		})
 	})
 

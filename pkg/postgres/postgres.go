@@ -16,6 +16,7 @@ func NewFestivalStorage(dsn string) *FestivalStorage {
 	return &FestivalStorage{sqlx.MustConnect("postgres", dsn)}
 }
 
+// FestivalStorage implements lineuplist.FestivalStorage
 type FestivalStorage struct {
 	*sqlx.DB
 }
@@ -23,8 +24,9 @@ type FestivalStorage struct {
 // LoadAll returns all stored festivals
 func (fs *FestivalStorage) LoadAll() ([]lineuplist.Festival, error) {
 	var fests []lineuplist.Festival
+	q := "SELECT name, start_date, end_date, country, state, city FROM festival"
 
-	err := fs.Select(&fests, "SELECT name, date, location FROM festival")
+	err := fs.Select(&fests, q)
 	if err != nil {
 		return []lineuplist.Festival{}, err
 	}
@@ -36,8 +38,9 @@ func (fs *FestivalStorage) LoadAll() ([]lineuplist.Festival, error) {
 // with that name.
 func (fs *FestivalStorage) Load(name string) ([]lineuplist.Festival, error) {
 	var fests []lineuplist.Festival
+	q := "SELECT name FROM festival WHERE name =" + name
 
-	err := fs.Select(&fests, "SELECT name FROM festival WHERE name ="+name)
+	err := fs.Select(&fests, q)
 	if err != nil {
 		return []lineuplist.Festival{{}}, err
 	}
@@ -47,13 +50,18 @@ func (fs *FestivalStorage) Load(name string) ([]lineuplist.Festival, error) {
 
 // Save inserts the festival in the database.
 func (fs *FestivalStorage) Save(f lineuplist.Festival) error {
+	q := "INSERT INTO festival(id, name, start_date, end_date, country, state, city)" +
+		"VALUES($1, $2, $3, $4, $5, $6, $7)"
+
 	id, err := uuid.NewV4()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
-	_, err = fs.Exec("INSERT INTO festival(id, name, date, location)"+
-		"VALUES($1, $2, $3, $4)", id, f.Name, f.Date, f.Location)
+	_, err = fs.Exec(
+		q, id, f.Name, f.StartDate, f.EndDate,
+		f.Country, f.State, f.City,
+	)
 	if err != nil {
 		return err
 	}

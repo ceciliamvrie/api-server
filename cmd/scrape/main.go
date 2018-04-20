@@ -27,7 +27,6 @@ func main() {
 
 	db := postgres.NewFestivalStorage(os.Getenv("PG_DSN"))
 	for _, f := range fests {
-		log.Printf("   Saving %#v...", f)
 		err = db.Save(f)
 		if err != nil {
 			log.Print(err)
