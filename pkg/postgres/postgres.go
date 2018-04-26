@@ -1,69 +1,61 @@
 package postgres
 
 import (
+	"database/sql"
 	"log"
 
-	"github.com/jmoiron/sqlx"
-	"github.com/satori/go.uuid"
-	"github.com/techmexdev/lineuplist"
+	"github.com/golang-migrate/migrate"
+	migpg "github.com/golang-migrate/migrate/database/postgres"
 )
 
-// FestivalStorage is a postgres implementation
-// of lineuplist.FestivalStorage
-
-// NewFestivalStorage returns a FestivalStorage postgres implementation.
-func NewFestivalStorage(dsn string) *FestivalStorage {
-	return &FestivalStorage{sqlx.MustConnect("postgres", dsn)}
-}
-
-// FestivalStorage implements lineuplist.FestivalStorage
-type FestivalStorage struct {
-	*sqlx.DB
-}
-
-// LoadAll returns all stored festivals
-func (fs *FestivalStorage) LoadAll() ([]lineuplist.Festival, error) {
-	var fests []lineuplist.Festival
-	q := "SELECT name, start_date, end_date, country, state, city FROM festival"
-
-	err := fs.Select(&fests, q)
+// MigrateUp applies all up migrations to a pg db.
+func MigrateUp(dsn string) {
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		return []lineuplist.Festival{}, err
+		log.Fatal(err)
 	}
 
-	return fests, nil
+	driver, err := migpg.WithInstance(db, &migpg.Config{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	m, err := migrate.NewWithDatabaseInstance(
+		"file://../../migrations",
+		"postgres", driver)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = m.Up()
+	if err != nil {
+		log.Println("error applying up migrations: ", err)
+	}
+
 }
 
-// Load returns all stored festivals
-// with that name.
-func (fs *FestivalStorage) Load(name string) ([]lineuplist.Festival, error) {
-	var fests []lineuplist.Festival
-	q := "SELECT name FROM festival WHERE name =" + name
-
-	err := fs.Select(&fests, q)
+// MigrateDown applies all down migrations to a pg db.
+func MigrateDown(dsn string) {
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		return []lineuplist.Festival{{}}, err
+		log.Fatal(err)
 	}
 
-	return fests, nil
-}
-
-// Save inserts the festival in the database.
-func (fs *FestivalStorage) Save(f lineuplist.Festival) error {
-	q := "INSERT INTO festival(id, name, start_date, end_date, country, state, city)" +
-		"VALUES($1, $2, $3, $4, $5, $6, $7)"
-
-	id, err := uuid.NewV4()
+	driver, err := migpg.WithInstance(db, &migpg.Config{})
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 
-	_, err = fs.Exec(
-		q, id, f.Name, f.StartDate, f.EndDate,
-		f.Country, f.State, f.City,
-	)
+	m, err := migrate.NewWithDatabaseInstance(
+		"file://../../migrations",
+		"postgres", driver)
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
-	return nil
+
+	err = m.Down()
+	if err != nil {
+		log.Println("error applying down migrations: ", err)
+	}
+
 }
