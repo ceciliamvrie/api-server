@@ -10,42 +10,14 @@ import (
 	"github.com/techmexdev/lineuplist/pkg/postgres"
 )
 
-var aa []lineuplist.Artist
-
-func init() {
-	aa = []lineuplist.Artist{
-		{Name: "Kanye West"},
-		{Name: "Lana del Rey"},
-		{Name: "Zoé"},
-	}
-}
-
 func TestAritstStore(t *testing.T) {
-	postgres.MigrateUp(os.Getenv("PG_TEST_DSN"))
-	defer postgres.MigrateDown(os.Getenv("PG_TEST_DSN"))
-
-	aStore := postgres.NewArtistStorage(os.Getenv("PG_TEST_DSN"))
-
-	for _, a := range aa {
-		_, err := aStore.Save(a)
-		if err != nil {
-			t.Fatalf("error saving artist %v: %s", a, err)
-		}
-	}
+	_, _, migrateDown := storeArtists(t)
+	defer migrateDown()
 }
 
 func TestLoadAll(t *testing.T) {
-	postgres.MigrateUp(os.Getenv("PG_TEST_DSN"))
-	defer postgres.MigrateDown(os.Getenv("PG_TEST_DSN"))
-
-	aStore := postgres.NewArtistStorage(os.Getenv("PG_TEST_DSN"))
-
-	for _, a := range aa {
-		_, err := aStore.Save(a)
-		if err != nil {
-			t.Fatalf("error saving artist %v: %s", a, err)
-		}
-	}
+	aa, aStore, migrateDown := storeArtists(t)
+	defer migrateDown()
 
 	storedA, err := aStore.LoadAll()
 	if err != nil {
@@ -60,8 +32,26 @@ func TestLoadAll(t *testing.T) {
 }
 
 func TestLoad(t *testing.T) {
+	aa, aStore, migrateDown := storeArtists(t)
+	defer migrateDown()
+
+	lana, err := aStore.Load("Lana del Rey")
+	if err != nil {
+		t.Fatalf("error loading artist: %s", err)
+	}
+
+	if lana.Name != "Lana del Rey" {
+		t.Fatalf("error loading artist: have %v, want %v", lana, aa[1])
+	}
+}
+
+func storeArtists(t *testing.T) (aa []lineuplist.Artist, as lineuplist.ArtistStorage, migrateDown func()) {
+	aa = []lineuplist.Artist{
+		{Name: "Kanye West"},
+		{Name: "Lana del Rey"},
+		{Name: "Zoé"},
+	}
 	postgres.MigrateUp(os.Getenv("PG_TEST_DSN"))
-	defer postgres.MigrateDown(os.Getenv("PG_TEST_DSN"))
 
 	aStore := postgres.NewArtistStorage(os.Getenv("PG_TEST_DSN"))
 
@@ -72,12 +62,5 @@ func TestLoad(t *testing.T) {
 		}
 	}
 
-	lana, err := aStore.Load("Lana del Rey")
-	if err != nil {
-		t.Fatalf("error loading artist: %s", err)
-	}
-
-	if lana.Name != "Lana del Rey" {
-		t.Fatalf("error loading artist: have %v, want %v", lana, aa[1])
-	}
+	return aa, aStore, func() { postgres.MigrateDown(os.Getenv("PG_TEST_DSN")) }
 }

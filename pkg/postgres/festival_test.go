@@ -12,52 +12,14 @@ import (
 	"github.com/techmexdev/lineuplist/pkg/postgres"
 )
 
-var ff []lineuplist.Festival
-
-func init() {
-	ff = []lineuplist.Festival{
-		{
-			Name:      "Austin City Limits",
-			StartDate: time.Now(), EndDate: time.Now(),
-			Country: "United States", State: "Tx", City: "Austin",
-			Lineup: []lineuplist.Artist{{Name: "Red Hot Chilli Peppers"}, {Name: "Gorillaz"}, {Name: "Jay-Z"}},
-		},
-		{
-			Name:      "Levitation",
-			StartDate: time.Now(), EndDate: time.Now(),
-			Country: "United States", State: "Tx", City: "Austin",
-			Lineup: []lineuplist.Artist{{Name: "Gorillaz"}, {Name: "The Octopus Project"}, {Name: "Ariel Pink"}},
-		},
-	}
-}
-
 func TestFestivalSave(t *testing.T) {
-	postgres.MigrateUp(os.Getenv("PG_TEST_DSN"))
-	defer postgres.MigrateDown(os.Getenv("PG_TEST_DSN"))
-
-	fStore := postgres.NewFestivalStorage(os.Getenv("PG_TEST_DSN"))
-
-	for _, f := range ff {
-		_, err := fStore.Save(f)
-		if err != nil {
-			t.Fatalf("error saving festival %v: %s", f, err)
-		}
-	}
-
+	_, _, migrateDown := storeFestivals(t)
+	defer migrateDown()
 }
 
 func TestLoadAll(t *testing.T) {
-	postgres.MigrateUp(os.Getenv("PG_TEST_DSN"))
-	defer postgres.MigrateDown(os.Getenv("PG_TEST_DSN"))
-
-	fStore := postgres.NewFestivalStorage(os.Getenv("PG_TEST_DSN"))
-
-	for _, f := range ff {
-		_, err := fStore.Save(f)
-		if err != nil {
-			t.Fatalf("error saving festival %v: %s", f, err)
-		}
-	}
+	ff, fStore, migrateDown := storeFestivals(t)
+	defer migrateDown()
 
 	storedFf, err := fStore.LoadAll()
 	if err != nil {
@@ -72,17 +34,8 @@ func TestLoadAll(t *testing.T) {
 }
 
 func TestLoad(t *testing.T) {
-	postgres.MigrateUp(os.Getenv("PG_TEST_DSN"))
-	defer postgres.MigrateDown(os.Getenv("PG_TEST_DSN"))
-
-	fStore := postgres.NewFestivalStorage(os.Getenv("PG_TEST_DSN"))
-
-	for _, f := range ff {
-		_, err := fStore.Save(f)
-		if err != nil {
-			t.Fatalf("error saving festival %v: %s", f, err)
-		}
-	}
+	ff, fStore, migrateDown := storeFestivals(t)
+	defer migrateDown()
 
 	acl, err := fStore.Load("Austin City Limits")
 	if err != nil {
@@ -95,17 +48,8 @@ func TestLoad(t *testing.T) {
 }
 
 func TestFromArtist(t *testing.T) {
-	postgres.MigrateUp(os.Getenv("PG_TEST_DSN"))
-	defer postgres.MigrateDown(os.Getenv("PG_TEST_DSN"))
-
-	fStore := postgres.NewFestivalStorage(os.Getenv("PG_TEST_DSN"))
-
-	for _, f := range ff {
-		_, err := fStore.Save(f)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
+	_, fStore, migrateDown := storeFestivals(t)
+	defer migrateDown()
 
 	gorFf, err := fStore.FromArtist("Gorillaz")
 	if err != nil {
@@ -124,6 +68,36 @@ func TestFromArtist(t *testing.T) {
 	if !containsACL || !containsLev {
 		t.Fatalf("expecting %v to contain festivals: 'Austin City Limits', and 'Levitation'", gorFf)
 	}
+}
+
+func storeFestivals(t *testing.T) (ff []lineuplist.Festival, fs lineuplist.FestivalStorage, migrateDown func()) {
+	ff = []lineuplist.Festival{
+		{
+			Name:      "Austin City Limits",
+			StartDate: time.Now(), EndDate: time.Now(),
+			Country: "United States", State: "Tx", City: "Austin",
+			Lineup: []lineuplist.Artist{{Name: "Red Hot Chilli Peppers"}, {Name: "Gorillaz"}, {Name: "Jay-Z"}},
+		},
+		{
+			Name:      "Levitation",
+			StartDate: time.Now(), EndDate: time.Now(),
+			Country: "United States", State: "Tx", City: "Austin",
+			Lineup: []lineuplist.Artist{{Name: "Gorillaz"}, {Name: "The Octopus Project"}, {Name: "Ariel Pink"}},
+		},
+	}
+
+	postgres.MigrateUp(os.Getenv("PG_TEST_DSN"))
+
+	fStore := postgres.NewFestivalStorage(os.Getenv("PG_TEST_DSN"))
+
+	for _, f := range ff {
+		_, err := fStore.Save(f)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	return ff, fStore, func() { postgres.MigrateDown(os.Getenv("PG_TEST_DSN")) }
 }
 
 func lineupEqual(a, b []lineuplist.Artist) bool {
