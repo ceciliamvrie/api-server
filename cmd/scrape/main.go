@@ -1,12 +1,9 @@
 package main
 
 import (
-	"database/sql"
 	"log"
 	"os"
 
-	"github.com/golang-migrate/migrate"
-	migpg "github.com/golang-migrate/migrate/database/postgres"
 	_ "github.com/golang-migrate/migrate/source/file"
 	_ "github.com/lib/pq"
 	"github.com/techmexdev/lineuplist/pkg/postgres"
@@ -15,7 +12,7 @@ import (
 
 func main() {
 	log.Println("migrating database...")
-	migrateDB()
+	postgres.MigrateUp("file://migrations", os.Getenv("PG_DSN"))
 
 	log.Println("scraping festivals...")
 	fests, err := scraper.Festivals()
@@ -23,35 +20,15 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Printf("scraped %v festivals", len(fests))
+	log.Printf("scraped %v festivals\n\n", len(fests))
 
-	db := postgres.NewFestivalStorage(os.Getenv("PG_DSN"))
+	fStore := postgres.NewFestivalStorage(os.Getenv("PG_DSN"))
+
 	for _, f := range fests {
-		err = db.Save(f)
+		_, err = fStore.Save(f)
 		if err != nil {
-			log.Print(err)
+			log.Printf("error saving %s: %s", f.Name, err)
 		}
 	}
 
-}
-
-func migrateDB() {
-	db, err := sql.Open("postgres", os.Getenv("PG_DSN"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	driver, err := migpg.WithInstance(db, &migpg.Config{})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	m, err := migrate.NewWithDatabaseInstance(
-		"file://migrations",
-		"postgres", driver)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	m.Up()
 }

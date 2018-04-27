@@ -5,24 +5,44 @@ import (
 	"regexp"
 	"strconv"
 
+	"sync"
+
+	"github.com/PuerkitoBio/goquery"
 	"github.com/gocolly/colly"
 	"github.com/techmexdev/lineuplist"
 )
 
-// Festivals scrapes musicfestivalwizard.com for
-// festivals in the US.
 func Festivals() ([]lineuplist.Festival, error) {
-	fests := []lineuplist.Festival{}
+	ff := []lineuplist.Festival{}
 
-	for i := 1; i <= pageCount(); i++ {
-		fests = append(fests, scrapePage(i)...)
+	c := colly.NewCollector(colly.Async(true))
+	wg := sync.WaitGroup{}
+
+	c.OnError(func(r *colly.Response, err error) {
+		log.Printf("colly response error: %s", err)
+	})
+
+	c.OnHTML(".festivaltitle", func(e *colly.HTMLElement) {
+		c.Visit(e.ChildAttr("a", "href"))
+	})
+
+	scrapeONFestivalPage(c, &ff, &wg)
+
+	pc := pageCount()
+	for i := 1; i <= pc; i++ {
+		pageLink := "https://www.musicfestivalwizard.com/all-festivals/page/" + strconv.Itoa(i) + "/?festival_guide=us-festivals"
+		log.Println("pageLink: ", pageLink)
+		go c.Visit(pageLink)
 	}
 
-	return fests, nil
+	c.Wait()
+
+	return ff, nil
 }
 
 func pageCount() int {
 	var lastPageNum int
+
 	c := colly.NewCollector()
 
 	c.OnHTML("ul.page-numbers", func(e *colly.HTMLElement) {
@@ -40,36 +60,45 @@ func pageCount() int {
 	return lastPageNum
 }
 
-func scrapePage(page int) []lineuplist.Festival {
-	fests := []lineuplist.Festival{}
-	c := colly.NewCollector()
+func scrapeONFestivalPage(c *colly.Collector, ff *[]lineuplist.Festival, wg *sync.WaitGroup) {
+	c.OnHTML("#inner-wrap", func(e *colly.HTMLElement) {
+		wg.Add(1)
+		var f lineuplist.Festival
 
-	c.OnHTML(".singlefestlisting", func(e *colly.HTMLElement) {
-		name := regexp.MustCompile("(.*[^ \\d])").FindString(e.ChildText(".festivaltitle"))
-		startDate, endDate, err := parseDate(e.ChildText(".festivaldate"))
-		if err != nil {
-			log.Println("error parsing date for: ", name, err)
+		text := e.DOM.Find("#festival-basics").Text()
+		parsedText := regexp.MustCompile(`WHERE:(\w+,\s\w.)\sWHEN:(.*)`).FindStringSubmatch(text)
+		if len(parsedText) != 3 {
 			return
 		}
 
-		country, state, city, err := parseLocation(e.ChildText(".festivallocation"))
+		f.Name = e.ChildText("h1.entry-title span")
+
+		var err error
+		f.StartDate, f.EndDate, err = parseDate(parsedText[2])
 		if err != nil {
-			log.Println("error parsing location for ", name, err)
+			log.Println("error parsing date for: ", f.Name, err)
 			return
 		}
 
-		fests = append(fests, lineuplist.Festival{
-			Name:      name,
-			StartDate: startDate,
-			EndDate:   endDate,
-			Country:   country,
-			State:     state,
-			City:      city,
+		f.Country, f.State, f.City, err = parseLocation(parsedText[1])
+		if err != nil {
+			log.Println("error parsing location for ", f.Name, err)
+			return
+		}
+
+		aNames := e.DOM.Find(".lineupguide li").Map(func(_ int, s *goquery.Selection) string {
+			return s.Text()
 		})
+		for _, name := range aNames {
+			f.Lineup = append(f.Lineup, lineuplist.Artist{Name: name})
+		}
+
+		if len(f.Lineup) == 0 {
+			return
+		}
+
+		log.Printf("scraped: %s\n", f.Name)
+		*ff = append(*ff, f)
+		wg.Done()
 	})
-
-	c.Visit("https://www.musicfestivalwizard.com/all-festivals/page/" + strconv.Itoa(page) + "/?festival_guide=us-festivals")
-	c.Wait()
-
-	return fests
 }
