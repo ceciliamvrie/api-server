@@ -68,7 +68,7 @@ func storeArtists(t *testing.T) (aa []lineuplist.Artist, as lineuplist.ArtistSto
 		{Name: "Lana del Rey"},
 		{Name: "Zoé"},
 	}
-	postgres.MigrateUp(os.Getenv("PG_TEST_DSN"))
+	postgres.MigrateUp("file://../../migrations", os.Getenv("PG_TEST_DSN"))
 
 	aStore := postgres.NewArtistStorage(os.Getenv("PG_TEST_DSN"))
 
@@ -79,7 +79,7 @@ func storeArtists(t *testing.T) (aa []lineuplist.Artist, as lineuplist.ArtistSto
 		}
 	}
 
-	return aa, aStore, func() { postgres.MigrateDown(os.Getenv("PG_TEST_DSN")) }
+	return aa, aStore, func() { postgres.MigrateDown("file://../../migrations", os.Getenv("PG_TEST_DSN")) }
 }
 
 func storeFestivals(t *testing.T) (ff []lineuplist.Festival, fs lineuplist.FestivalStorage, migrateDown func()) {
@@ -98,7 +98,7 @@ func storeFestivals(t *testing.T) (ff []lineuplist.Festival, fs lineuplist.Festi
 		},
 	}
 
-	postgres.MigrateUp(os.Getenv("PG_TEST_DSN"))
+	postgres.MigrateUp("file://../../migrations", os.Getenv("PG_TEST_DSN"))
 
 	fStore := postgres.NewFestivalStorage(os.Getenv("PG_TEST_DSN"))
 
@@ -109,7 +109,10 @@ func storeFestivals(t *testing.T) (ff []lineuplist.Festival, fs lineuplist.Festi
 		}
 	}
 
-	return ff, fStore, func() { postgres.MigrateDown(os.Getenv("PG_TEST_DSN")) }
+	return ff, fStore,
+		func() {
+			postgres.MigrateDown("file://../../migrations", os.Getenv("PG_TEST_DSN"))
+		}
 }
 
 func lineupEqual(a, b []lineuplist.Artist) bool {

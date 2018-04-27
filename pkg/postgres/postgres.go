@@ -9,7 +9,7 @@ import (
 )
 
 // MigrateUp applies all up migrations to a pg db.
-func MigrateUp(dsn string) {
+func MigrateUp(pathToMigs, dsn string) {
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		log.Fatal(err)
@@ -21,7 +21,7 @@ func MigrateUp(dsn string) {
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://../../migrations",
+		pathToMigs, // expecting format: "file://../../migrations"
 		"postgres", driver)
 	if err != nil {
 		log.Fatal(err)
@@ -35,7 +35,7 @@ func MigrateUp(dsn string) {
 }
 
 // MigrateDown applies all down migrations to a pg db.
-func MigrateDown(dsn string) {
+func MigrateDown(pathToMigs, dsn string) {
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		log.Fatal(err)
@@ -47,7 +47,7 @@ func MigrateDown(dsn string) {
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://../../migrations",
+		pathToMigs, // expecting format: "file://../../migrations"
 		"postgres", driver)
 	if err != nil {
 		log.Fatal(err)

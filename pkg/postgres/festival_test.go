@@ -27,6 +27,7 @@ func TestLoadAll(t *testing.T) {
 	}
 
 	for i := range storedFf {
+		log.Printf("%#v", storedFf[i])
 		if storedFf[i].Name != ff[i].Name || !lineupEqual(storedFf[i].Lineup, ff[i].Lineup) {
 			log.Fatalf("error comparing stored festivals: have %v, want %v", storedFf[i], ff[i])
 		}
@@ -86,7 +87,7 @@ func storeFestivals(t *testing.T) (ff []lineuplist.Festival, fs lineuplist.Festi
 		},
 	}
 
-	postgres.MigrateUp(os.Getenv("PG_TEST_DSN"))
+	postgres.MigrateUp("file://../../migrations", os.Getenv("PG_TEST_DSN"))
 
 	fStore := postgres.NewFestivalStorage(os.Getenv("PG_TEST_DSN"))
 
@@ -97,7 +98,9 @@ func storeFestivals(t *testing.T) (ff []lineuplist.Festival, fs lineuplist.Festi
 		}
 	}
 
-	return ff, fStore, func() { postgres.MigrateDown(os.Getenv("PG_TEST_DSN")) }
+	return ff, fStore, func() {
+		postgres.MigrateDown("file://../../migrations", os.Getenv("PG_TEST_DSN"))
+	}
 }
 
 func lineupEqual(a, b []lineuplist.Artist) bool {
