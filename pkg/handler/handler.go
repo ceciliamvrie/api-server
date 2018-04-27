@@ -21,9 +21,11 @@ type route struct {
 }
 
 type handler struct {
-	fStore lineuplist.FestivalStorage
-	aStore lineuplist.ArtistStorage
-	render *render.Render
+	fStore  lineuplist.FestivalStorage
+	fpStore lineuplist.FestivalPreviewStorage
+	aStore  lineuplist.ArtistStorage
+	apStore lineuplist.ArtistPreviewStorage
+	render  *render.Render
 }
 
 var signature string
@@ -32,13 +34,18 @@ var signature string
 func New(dsn string, options Options) *mux.Router {
 	router := mux.NewRouter()
 	h := handler{
-		fStore: postgres.NewFestivalStorage(dsn),
-		aStore: postgres.NewArtistStorage(dsn),
-		render: render.New(),
+		fStore:  postgres.NewFestivalStorage(dsn),
+		fpStore: postgres.NewFestivalPreviewStorage(dsn),
+		aStore:  postgres.NewArtistStorage(dsn),
+		apStore: postgres.NewArtistPreviewStorage(dsn),
+		render:  render.New(),
 	}
 
 	routes := []route{
 		{method: "GET", path: "/festivals", handler: h.Festivals},
+		{method: "GET", path: "/festivals/{festName}", handler: h.Festival},
+		{method: "GET", path: "/artists", handler: h.Artists},
+		{method: "GET", path: "/artists/{artistName}", handler: h.Artist},
 	}
 
 	for _, r := range routes {

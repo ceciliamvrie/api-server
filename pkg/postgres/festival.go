@@ -25,13 +25,13 @@ func (db *FestivalStorage) LoadAll() ([]lineuplist.Festival, error) {
 		return []lineuplist.Festival{}, err
 	}
 
-	aStore := ArtistStorage{db.DB}
+	apStore := ArtistPreviewStorage{db.DB}
 	for i := range ff {
-		aa, err := aStore.FromFestival(ff[i].Name)
+		aps, err := apStore.FromFestival(ff[i].Name)
 		if err != nil {
 			return []lineuplist.Festival{}, err
 		}
-		ff[i].Lineup = aa
+		ff[i].Lineup = aps
 	}
 
 	return ff, nil
@@ -42,18 +42,18 @@ func (db *FestivalStorage) LoadAll() ([]lineuplist.Festival, error) {
 func (db *FestivalStorage) Load(name string) (lineuplist.Festival, error) {
 	var f lineuplist.Festival
 
-	err := db.Get(&f, "SELECT id, name FROM festival WHERE name = $1", name)
+	err := db.Get(&f, "SELECT * FROM festival WHERE name = $1", name)
 	if err != nil {
 		return lineuplist.Festival{}, err
 	}
 
-	aStore := &ArtistStorage{db.DB}
-	aa, err := aStore.FromFestival(f.Name)
+	apStore := &ArtistPreviewStorage{db.DB}
+	aps, err := apStore.FromFestival(f.Name)
 	if err != nil {
 		return lineuplist.Festival{}, err
 	}
 
-	f.Lineup = aa
+	f.Lineup = aps
 
 	return f, nil
 }
@@ -75,14 +75,14 @@ func (db *FestivalStorage) Save(f lineuplist.Festival) (lineuplist.Festival, err
 		return lineuplist.Festival{}, err
 	}
 
-	aStore := ArtistStorage{db.DB}
+	apStore := ArtistPreviewStorage{db.DB}
 
-	for _, a := range f.Lineup {
-		var storedA lineuplist.Artist
+	for _, ap := range f.Lineup {
+		var storedAp lineuplist.ArtistPreview
 
-		storedA, err = aStore.Load(a.Name)
+		storedAp, err = apStore.Load(ap.Name)
 		if err != nil {
-			storedA, err = aStore.Save(a)
+			storedAp, err = apStore.Save(ap)
 			if err != nil {
 				return lineuplist.Festival{}, err
 			}
@@ -94,7 +94,7 @@ func (db *FestivalStorage) Save(f lineuplist.Festival) (lineuplist.Festival, err
 		}
 
 		_, err = db.Exec(`INSERT INTO festival_artist(id, festival_id, artist_id)
-			VALUES($1, $2, $3)`, festArtID.String(), f.ID, storedA.ID)
+			VALUES($1, $2, $3)`, festArtID.String(), f.ID, storedAp.ID)
 		if err != nil {
 			return lineuplist.Festival{}, err
 		}

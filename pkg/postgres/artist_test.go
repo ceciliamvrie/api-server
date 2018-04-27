@@ -11,12 +11,7 @@ import (
 	"github.com/techmexdev/lineuplist/pkg/postgres"
 )
 
-func TestAritstStore(t *testing.T) {
-	_, _, migrateDown := storeArtists(t)
-	defer migrateDown()
-}
-
-func TestLoadAll(t *testing.T) {
+func TestLoadAndLoadAll(t *testing.T) {
 	aa, aStore, migrateDown := storeArtists(t)
 	defer migrateDown()
 
@@ -30,42 +25,38 @@ func TestLoadAll(t *testing.T) {
 			t.Fatalf("error comparing stored artists: have %v, want %v", storedA[i], aa[i])
 		}
 	}
-}
 
-func TestLoad(t *testing.T) {
-	aa, aStore, migrateDown := storeArtists(t)
-	defer migrateDown()
-
-	lana, err := aStore.Load("Lana del Rey")
+	gol, err := aStore.Load("Gorillaz")
 	if err != nil {
 		t.Fatalf("error loading artist: %s", err)
 	}
 
-	if lana.Name != "Lana del Rey" {
-		t.Fatalf("error loading artist: have %v, want %v", lana, aa[1])
+	if gol.Name != "Gorillaz" {
+		t.Fatalf("error loading artist: have %v, want %v", gol, aa[1])
 	}
 }
 
-func TestFromFestival(t *testing.T) {
-	ff, _, migrateDown := storeFestivals(t)
+func TestArtistsFestivals(t *testing.T) {
+	_, _, migrateDown := storeFestivals(t)
 	defer migrateDown()
 
 	aStore := postgres.NewArtistStorage(os.Getenv("PG_TEST_DSN"))
 
-	aclAa, err := aStore.FromFestival("Austin City Limits")
+	gol, err := aStore.Load("Gorillaz")
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("error loading artist: %s", err)
 	}
 
-	if !lineupEqual(ff[0].Lineup, aclAa) {
-		t.Fatalf("error retriving artists from 'Austin City Limits': have %v, want %v", aclAa, ff[0].Lineup)
+	expFf := []lineuplist.FestivalPreview{{Name: "Austin City Limits"}, {Name: "Levitation"}}
+	if gol.Festivals[0].Name != expFf[0].Name || gol.Festivals[1].Name != expFf[1].Name {
+		t.Fatalf("error retrieving artist's festivals: have %v, want %v", gol.Festivals, expFf)
 	}
 }
 
 func storeArtists(t *testing.T) (aa []lineuplist.Artist, as lineuplist.ArtistStorage, migrateDown func()) {
 	aa = []lineuplist.Artist{
 		{Name: "Kanye West"},
-		{Name: "Lana del Rey"},
+		{Name: "Gorillaz"},
 		{Name: "Zoé"},
 	}
 	postgres.MigrateUp("file://../../migrations", os.Getenv("PG_TEST_DSN"))
@@ -88,13 +79,13 @@ func storeFestivals(t *testing.T) (ff []lineuplist.Festival, fs lineuplist.Festi
 			Name:      "Austin City Limits",
 			StartDate: time.Now(), EndDate: time.Now(),
 			Country: "United States", State: "Tx", City: "Austin",
-			Lineup: []lineuplist.Artist{{Name: "Red Hot Chilli Peppers"}, {Name: "Gorillaz"}, {Name: "Jay-Z"}},
+			Lineup: []lineuplist.ArtistPreview{{Name: "Red Hot Chilli Peppers"}, {Name: "Gorillaz"}, {Name: "Jay-Z"}},
 		},
 		{
 			Name:      "Levitation",
 			StartDate: time.Now(), EndDate: time.Now(),
 			Country: "United States", State: "Tx", City: "Austin",
-			Lineup: []lineuplist.Artist{{Name: "Gorillaz"}, {Name: "The Octopus Project"}, {Name: "Ariel Pink"}},
+			Lineup: []lineuplist.ArtistPreview{{Name: "Gorillaz"}, {Name: "The Octopus Project"}, {Name: "Ariel Pink"}},
 		},
 	}
 

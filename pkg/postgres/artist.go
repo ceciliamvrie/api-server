@@ -39,6 +39,12 @@ func (db *ArtistStorage) Load(name string) (lineuplist.Artist, error) {
 		return lineuplist.Artist{}, err
 	}
 
+	fpStore := FestivalPreviewStorage{db.DB}
+	a.Festivals, err = fpStore.FromArtist(name)
+	if err != nil {
+		return lineuplist.Artist{}, err
+	}
+
 	return a, nil
 }
 

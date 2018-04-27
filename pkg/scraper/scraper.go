@@ -90,7 +90,7 @@ func scrapeONFestivalPage(c *colly.Collector, ff *[]lineuplist.Festival, wg *syn
 			return s.Text()
 		})
 		for _, name := range aNames {
-			f.Lineup = append(f.Lineup, lineuplist.Artist{Name: name})
+			f.Lineup = append(f.Lineup, lineuplist.ArtistPreview{Name: name})
 		}
 
 		if len(f.Lineup) == 0 {

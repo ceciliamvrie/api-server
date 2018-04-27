@@ -77,13 +77,13 @@ func storeFestivals(t *testing.T) (ff []lineuplist.Festival, fs lineuplist.Festi
 			Name:      "Austin City Limits",
 			StartDate: time.Now(), EndDate: time.Now(),
 			Country: "United States", State: "Tx", City: "Austin",
-			Lineup: []lineuplist.Artist{{Name: "Red Hot Chilli Peppers"}, {Name: "Gorillaz"}, {Name: "Jay-Z"}},
+			Lineup: []lineuplist.ArtistPreview{{Name: "Red Hot Chilli Peppers"}, {Name: "Gorillaz"}, {Name: "Jay-Z"}},
 		},
 		{
 			Name:      "Levitation",
 			StartDate: time.Now(), EndDate: time.Now(),
 			Country: "United States", State: "Tx", City: "Austin",
-			Lineup: []lineuplist.Artist{{Name: "Gorillaz"}, {Name: "The Octopus Project"}, {Name: "Ariel Pink"}},
+			Lineup: []lineuplist.ArtistPreview{{Name: "Gorillaz"}, {Name: "The Octopus Project"}, {Name: "Ariel Pink"}},
 		},
 	}
 
@@ -103,7 +103,7 @@ func storeFestivals(t *testing.T) (ff []lineuplist.Festival, fs lineuplist.Festi
 	}
 }
 
-func lineupEqual(a, b []lineuplist.Artist) bool {
+func lineupEqual(a, b []lineuplist.ArtistPreview) bool {
 	if len(a) != len(b) {
 		return false
 	}
