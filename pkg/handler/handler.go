@@ -21,8 +21,9 @@ type route struct {
 }
 
 type handler struct {
-	festivalStore lineuplist.FestivalStorage
-	render        *render.Render
+	fStore lineuplist.FestivalStorage
+	aStore lineuplist.ArtistStorage
+	render *render.Render
 }
 
 var signature string
@@ -31,8 +32,9 @@ var signature string
 func New(dsn string, options Options) *mux.Router {
 	router := mux.NewRouter()
 	h := handler{
-		festivalStore: postgres.NewFestivalStorage(dsn),
-		render:        render.New(),
+		fStore: postgres.NewFestivalStorage(dsn),
+		aStore: postgres.NewArtistStorage(dsn),
+		render: render.New(),
 	}
 
 	routes := []route{

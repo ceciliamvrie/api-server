@@ -3,7 +3,7 @@ package handler
 import "net/http"
 
 func (h *handler) Festivals(w http.ResponseWriter, r *http.Request) {
-	fests, err := h.festivalStore.LoadAll()
+	fests, err := h.fStore.LoadAll()
 	if err != nil {
 		serverError(w, err)
 		return
