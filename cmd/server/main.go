@@ -31,7 +31,7 @@ func main() {
 		log.Println("Starting server at port 80...")
 		http.ListenAndServeTLS(":80", "server.crt", "server.key", router)
 	} else {
-		log.Println("Starting server at localhost:3000...")
-		log.Fatal(http.ListenAndServe(":3000", router))
+		log.Println("Starting server at localhost:8080...")
+		log.Fatal(http.ListenAndServe(":8080", router))
 	}
 }
