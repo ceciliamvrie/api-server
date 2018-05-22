@@ -4,6 +4,7 @@ import (
 	"log"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"sync"
 
@@ -71,7 +72,13 @@ func scrapeONFestivalPage(c *colly.Collector, ff *[]lineuplist.Festival, wg *syn
 			return
 		}
 
-		f.Name = e.ChildText("h1.entry-title span")
+		rawName := e.ChildText("h1.entry-title span")
+		matches := regexp.MustCompile("(\\D+)").FindStringSubmatch(rawName)
+		if len(matches) == 0 {
+			return
+		}
+
+		f.Name = strings.TrimSpace(matches[0])
 
 		var err error
 		f.StartDate, f.EndDate, err = parseDate(parsedText[2])

@@ -61,8 +61,9 @@ func (db *FestivalStorage) Load(name string) (lineuplist.Festival, error) {
 // Save inserts the festival in the database if it doesn't exist,
 // and retrieves it if it does.
 func (db *FestivalStorage) Save(f lineuplist.Festival) (lineuplist.Festival, error) {
-	q := "INSERT INTO festival(id, name, start_date, end_date, country, state, city)" +
-		"VALUES($1, $2, $3, $4, $5, $6, $7)"
+	q := `INSERT INTO festival(id, name, start_date, end_date, country, state, city)
+		VALUES($1, $2, $3, $4, $5, $6, $7)
+		ON CONFLICT (name) DO UPDATE SET name=EXCLUDED.name`
 
 	id, err := uuid.NewV4()
 	f.ID = id.String()

@@ -42,10 +42,10 @@ func New(dsn string, options Options) *mux.Router {
 	}
 
 	routes := []route{
-		{method: "GET", path: "/festivals", handler: h.Festivals},
-		{method: "GET", path: "/festivals/{festName}", handler: h.Festival},
-		{method: "GET", path: "/artists", handler: h.Artists},
-		{method: "GET", path: "/artists/{artistName}", handler: h.Artist},
+		{method: "GET", path: "/api/festivals", handler: h.Festivals},
+		{method: "GET", path: "/api/festivals/{festName}", handler: h.Festival},
+		{method: "GET", path: "/api/artists", handler: h.Artists},
+		{method: "GET", path: "/api/artists/{artistName}", handler: h.Artist},
 	}
 
 	for _, r := range routes {
