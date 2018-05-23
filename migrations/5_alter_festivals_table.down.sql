@@ -1,2 +1,2 @@
 ALTER TABLE festival
-  ADD COLUMN img_src VARCHAR;
+  DROP COLUMN img_src RESTRICT;
