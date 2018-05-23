@@ -4,14 +4,15 @@ import "time"
 
 // Festival is a music festival.
 type Festival struct {
-	ID        string    `json:"-"`
-	Name      string    `json:"name"`
-	Lineup    []ArtistPreview  `json:"lineup"`
-	StartDate time.Time `json:"startDate" db:"start_date"`
-	EndDate   time.Time `json:"endDate" db:"end_date"`
-	Country   string    `json:"country"`
-	State     string    `json:"state"`
-	City      string    `json:"city"`
+	ID        string          `json:"-"`
+	Name      string          `json:"name"`
+	Lineup    []ArtistPreview `json:"lineup"`
+	ImgSrc    string          `json:"imgSrc" db:"img_src"`
+	StartDate time.Time       `json:"startDate" db:"start_date"`
+	EndDate   time.Time       `json:"endDate" db:"end_date"`
+	Country   string          `json:"country"`
+	State     string          `json:"state"`
+	City      string          `json:"city"`
 }
 
 // FestivalStorage is an interface
@@ -26,8 +27,9 @@ type FestivalStorage interface {
 // FestivalPreview is a minimal representation
 // of a Festival.
 type FestivalPreview struct {
-	ID        string    `json:"-"`
-	Name      string    `json:"name"`
+	ID     string `json:"-"`
+	Name   string `json:"name"`
+	ImgSrc string `json:"imgSrc"`
 }
 
 // FestivalStorage is an interface
@@ -41,8 +43,8 @@ type FestivalPreviewStorage interface {
 
 // Artist is a musician or band.
 type Artist struct {
-	ID   string `json:"-"`
-	Name string `json:"name"`
+	ID        string            `json:"-"`
+	Name      string            `json:"name"`
 	Festivals []FestivalPreview `json:"festivals"`
 }
 

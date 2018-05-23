@@ -1,6 +1,8 @@
 package handler
 
-import "net/http"
+import (
+	"net/http"
+)
 
 func (h *handler) Festivals(w http.ResponseWriter, r *http.Request) {
 	fests, err := h.fpStore.LoadAll()

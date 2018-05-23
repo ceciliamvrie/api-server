@@ -41,8 +41,9 @@ func (db *FestivalPreviewStorage) LoadAll() ([]lineuplist.FestivalPreview, error
 	var fps []lineuplist.FestivalPreview
 	for _, f := range ff {
 		fps = append(fps, lineuplist.FestivalPreview{
-			ID:   f.ID,
-			Name: f.Name,
+			ID:     f.ID,
+			Name:   f.Name,
+			ImgSrc: f.ImgSrc,
 		})
 	}
 
@@ -58,8 +59,9 @@ func (db *FestivalPreviewStorage) Load(name string) (lineuplist.FestivalPreview,
 	}
 
 	return lineuplist.FestivalPreview{
-		ID:   f.ID,
-		Name: f.Name,
+		ID:     f.ID,
+		Name:   f.Name,
+		ImgSrc: f.ImgSrc,
 	}, nil
 }
 
