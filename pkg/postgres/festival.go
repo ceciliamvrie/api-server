@@ -1,6 +1,8 @@
 package postgres
 
 import (
+	"log"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/satori/go.uuid"
 	"github.com/techmexdev/lineuplist"
@@ -17,10 +19,14 @@ type FestivalStorage struct {
 }
 
 // LoadAll returns all stored festivals
-func (db *FestivalStorage) LoadAll() ([]lineuplist.Festival, error) {
+func (db *FestivalStorage) LoadAll(category string) ([]lineuplist.Festival, error) {
 	var ff []lineuplist.Festival
+	orderBy := "name"
 
-	err := db.Select(&ff, "SELECT * FROM festival")
+	if category == "upcoming" {
+		orderBy = "start_date"
+	}
+	err := db.Select(&ff, "SELECT name, img_src, start_date, end_date, country, state, city FROM festival ORDER BY "+orderBy)
 	if err != nil {
 		return []lineuplist.Festival{}, err
 	}
@@ -42,7 +48,8 @@ func (db *FestivalStorage) LoadAll() ([]lineuplist.Festival, error) {
 func (db *FestivalStorage) Load(name string) (lineuplist.Festival, error) {
 	var f lineuplist.Festival
 
-	err := db.Get(&f, "SELECT * FROM festival WHERE name = $1", name)
+	log.Println("festivalstorage.load - name: ", name)
+	err := db.Get(&f, "SELECT * FROM festival WHERE LOWER(name) = LOWER($1)", name)
 	if err != nil {
 		return lineuplist.Festival{}, err
 	}

@@ -72,7 +72,7 @@ func (db *ArtistStorage) Save(a lineuplist.Artist) (lineuplist.Artist, error) {
 func (db *ArtistStorage) FromFestival(fest string) ([]lineuplist.Artist, error) {
 	var aa []lineuplist.Artist
 
-	q := `SELECT * FROM artist WHERE id IN (
+	q := `SELECT name FROM artist WHERE id IN (
   	SELECT artist_id FROM festival_artist WHERE festival_id=(
   		SELECT id FROM festival WHERE name=$1))`
 

@@ -28,10 +28,14 @@ type handler struct {
 	render  *render.Render
 }
 
+type Server struct {
+	router *mux.Router
+}
+
 var signature string
 
 // New creates a router with all handlers
-func New(dsn string, options Options) *mux.Router {
+func New(dsn string, options Options) *Server {
 	router := mux.NewRouter()
 	h := handler{
 		fStore:  postgres.NewFestivalStorage(dsn),
@@ -56,5 +60,21 @@ func New(dsn string, options Options) *mux.Router {
 		router.Use(LogMiddleware)
 	}
 
-	return router
+	s := &Server{router}
+	return s
+}
+
+// ServeHTTP handles responding to http requests.
+func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	origin := r.Header.Get("Origin")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
+	if r.Method == "OPTIONS" {
+		return
+	}
+
+	s.router.ServeHTTP(w, r)
 }

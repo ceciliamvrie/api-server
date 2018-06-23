@@ -1,15 +1,19 @@
 package handler
 
 import (
+	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
 
 func (h *handler) Festival(w http.ResponseWriter, r *http.Request) {
-	fName := mux.Vars(r)["festName"]
+	name := mux.Vars(r)["name"]
+	name = strings.Replace(name, "-", " ", -1)
 
-	f, err := h.fStore.Load(fName)
+	log.Println("handler festival - name: ", name)
+	f, err := h.fStore.Load(name)
 	if err != nil {
 		serverError(w, err)
 		return

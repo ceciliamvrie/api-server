@@ -30,10 +30,10 @@ func (db *FestivalPreviewStorage) Save(fp lineuplist.FestivalPreview) (lineuplis
 	return fp, nil
 }
 
-func (db *FestivalPreviewStorage) LoadAll() ([]lineuplist.FestivalPreview, error) {
+func (db *FestivalPreviewStorage) LoadAll(category string) ([]lineuplist.FestivalPreview, error) {
 	fStore := FestivalStorage{db.DB}
 
-	ff, err := fStore.LoadAll()
+	ff, err := fStore.LoadAll(category)
 	if err != nil {
 		return []lineuplist.FestivalPreview{}, err
 	}
