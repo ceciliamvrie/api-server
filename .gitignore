@@ -1,3 +1,5 @@
 server.crt
 server.key
 .env
+/cmd/scrape/scrape
+/cmd/server/server
